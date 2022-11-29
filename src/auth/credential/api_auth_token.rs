@@ -89,6 +89,8 @@ impl ApiAuthTokenManager {
             expires_at: get_current_timestamp() + res_body.expires_in,
         };
 
+        dbg!(&access_token);
+
         Ok(access_token)
     }
 

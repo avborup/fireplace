@@ -22,11 +22,23 @@ pub struct FirebaseAuthClient {
 }
 
 impl FirebaseAuthClient {
-    pub fn new(service_account: ServiceAccount) -> Result<Self, FirebaseError> {
+    pub fn new(
+        service_account: ServiceAccount,
+        options: AuthClientOptions,
+    ) -> Result<Self, FirebaseError> {
         let client = reqwest::Client::builder()
-            .https_only(true)
+            // .https_only(true)
             .build()
             .context("Failed to create HTTP client")?;
+
+        let api_url = match options.host {
+            AuthApiHost::Cloud => "https://identitytoolkit.googleapis.com/v1".to_string(),
+            AuthApiHost::Emulator(host) => format!(
+                // "{}/identitytoolkit.googleapis.com/v1/projects/{}",
+                "{}/identitytoolkit.googleapis.com/v1",
+                host, // service_account.project_id
+            ),
+        };
 
         let credential_manager = ApiAuthTokenManager::new(service_account.clone());
         let token_handler = UserTokenManager::new(service_account, client.clone());
@@ -34,7 +46,7 @@ impl FirebaseAuthClient {
         Ok(Self {
             user_token_manager: token_handler,
             client,
-            api_url: "https://identitytoolkit.googleapis.com/v1".to_string(),
+            api_url,
             api_auth_token_manager: credential_manager,
         })
     }
@@ -57,6 +69,9 @@ impl FirebaseAuthClient {
                 tracing::error!("Failed to get access token: {}", e);
                 e
             })?;
+
+        dbg!(&access_token);
+        dbg!(url.as_ref());
 
         let builder = self
             .client
@@ -336,6 +351,17 @@ impl FirebaseAuthClient {
     pub async fn create_user(&self, new_user: NewUser) -> Result<String, FirebaseError> {
         let body = serde_json::to_string(&new_user).context("Failed to serialize new user")?;
 
+        let access_token = self
+            .api_auth_token_manager
+            .get_access_token()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to get access token: {}", e);
+                e
+            })?;
+
+        let id_token = dbg!(self.sign_in_with_custom_token(&access_token).await)?;
+
         let res = self
             .auth_post(self.url("/accounts:signUp"))
             .await?
@@ -496,6 +522,32 @@ impl FirebaseAuthClient {
         tracing::debug!("Set custom claims for user '{}'", user_id);
 
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct AuthClientOptions {
+    host: AuthApiHost,
+}
+
+#[derive(Debug)]
+enum AuthApiHost {
+    Cloud,
+    Emulator(String),
+}
+
+impl AuthClientOptions {
+    pub fn use_emulator(mut self, emulator_host: impl Into<String>) -> Self {
+        self.host = AuthApiHost::Emulator(emulator_host.into());
+        self
+    }
+}
+
+impl Default for AuthClientOptions {
+    fn default() -> Self {
+        Self {
+            host: AuthApiHost::Cloud,
+        }
     }
 }
 

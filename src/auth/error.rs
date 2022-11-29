@@ -17,7 +17,7 @@ pub struct AuthApiErrorInfo {
 
 #[derive(Debug, Deserialize)]
 pub struct SpecificAuthApiErrorInfo {
-    pub domain: String,
+    pub domain: Option<String>,
     pub message: String,
     pub reason: String,
 }
