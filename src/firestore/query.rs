@@ -280,6 +280,7 @@ pub(crate) struct ApiQueryOptions<'a> {
     pub collection_name: String,
     pub filter: Option<Filter<'a>>,
     pub limit: Option<i32>,
+    pub offset: Option<i32>,
     /// Whether to search descendant collections with the same name
     pub should_search_descendants: bool,
 }
@@ -298,6 +299,7 @@ impl<'a> ApiQueryOptions<'a> {
             parent: parent_path,
             collection_name: query.collection_name().to_string(),
             limit: query.limit(),
+            offset: query.offset(),
             should_search_descendants: query.should_search_descendants(),
             filter: query.filter(),
         }
@@ -310,6 +312,7 @@ pub trait FirestoreQuery<'a> {
     fn parent_path(&self) -> Option<String>;
     fn should_search_descendants(&self) -> bool;
     fn limit(&self) -> Option<i32>;
+    fn offset(&self) -> Option<i32>;
 }
 
 pub struct CollectionGroupQuery<'a> {
@@ -355,6 +358,10 @@ impl<'a> FirestoreQuery<'a> for CollectionGroupQuery<'a> {
     fn limit(&self) -> Option<i32> {
         None
     }
+
+    fn offset(&self) -> Option<i32> {
+        None
+    }
 }
 
 impl<'a> FirestoreQuery<'a> for CollectionReference {
@@ -375,6 +382,10 @@ impl<'a> FirestoreQuery<'a> for CollectionReference {
     }
 
     fn limit(&self) -> Option<i32> {
+        None
+    }
+
+    fn offset(&self) -> Option<i32> {
         None
     }
 }
@@ -417,6 +428,10 @@ impl<'a> FirestoreQuery<'a> for CollectionQuery<'a> {
 
     fn limit(&self) -> Option<i32> {
         self.collection.limit()
+    }
+
+    fn offset(&self) -> Option<i32> {
+        None
     }
 }
 

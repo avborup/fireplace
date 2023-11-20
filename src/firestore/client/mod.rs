@@ -794,6 +794,7 @@ impl FirestoreClient {
             filter: Some(filter),
             limit: None,
             should_search_descendants: false,
+            offset: None,
         })
         .await
     }
@@ -858,6 +859,7 @@ impl FirestoreClient {
                 filter: Some(filter),
                 limit: Some(1),
                 should_search_descendants: false,
+                offset: None,
             })
             .await?;
 
@@ -1001,6 +1003,7 @@ impl FirestoreClient {
             filter: None,
             limit: None,
             should_search_descendants: true,
+            offset: None,
         })
         .await
     }
@@ -1091,6 +1094,25 @@ impl FirestoreClient {
             filter: Some(filter),
             limit: None,
             should_search_descendants: true,
+            offset: None,
+        })
+        .await
+    }
+
+    pub async fn collection_group_query_with_pagination<'de, 'a, T: Deserialize<'de> + 'a>(
+        &'a mut self,
+        collection_name: impl Into<String>,
+        filter: Filter<'a>,
+        limit: i32,
+        offset: i32,
+    ) -> Result<FirebaseStream<T, FirebaseError>, FirebaseError> {
+        self.query_internal(ApiQueryOptions {
+            parent: self.root_resource_path.clone(),
+            collection_name: collection_name.into(),
+            filter: Some(filter),
+            limit: Some(limit),
+            should_search_descendants: true,
+            offset: Some(offset),
         })
         .await
     }
@@ -1179,6 +1201,7 @@ impl FirestoreClient {
             filter: Some(filter),
             limit: None,
             should_search_descendants: true,
+            offset: None,
         })
         .await
     }
@@ -1246,6 +1269,7 @@ impl FirestoreClient {
             filter: None,
             limit: None,
             should_search_descendants: false,
+            offset: None,
         })
         .await
     }
@@ -1408,7 +1432,7 @@ impl FirestoreClient {
             order_by: vec![],
             start_at: None,
             end_at: None,
-            offset: 0,
+            offset: options.offset.unwrap_or(0),
             limit: options.limit,
         };
 
