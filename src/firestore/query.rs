@@ -9,7 +9,7 @@
 - [x] >= greater than or equal to
 - [x] != not equal to
 - [x] array-contains
-- [ ] array-contains-any
+- [x] array-contains-any
 - [ ] in
 - [ ] not-in
 */
@@ -137,6 +137,18 @@ impl<T: Eq + Serialize> QueryOperator<T> for ArrayContains<T> {
 
     fn get_operator_code(&self) -> FieldFilterOperator {
         FieldFilterOperator::ArrayContains
+    }
+}
+
+pub struct ArrayContainsAny<T: Eq + Serialize>(pub T);
+
+impl<T: Eq + Serialize> QueryOperator<T> for ArrayContainsAny<T> {
+    fn get_value(self) -> T {
+        self.0
+    }
+
+    fn get_operator_code(&self) -> FieldFilterOperator {
+        FieldFilterOperator::ArrayContainsAny
     }
 }
 
