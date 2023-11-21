@@ -140,11 +140,11 @@ impl<T: Eq + Serialize> QueryOperator<T> for ArrayContains<T> {
     }
 }
 
-pub struct ArrayContainsAny<T: Eq + Serialize>(pub T);
+pub struct ArrayContainsAny();
 
-impl<T: Eq + Serialize> QueryOperator<T> for ArrayContainsAny<T> {
-    fn get_value(self) -> T {
-        self.0
+impl QueryOperator<()> for ArrayContainsAny {
+    fn get_value(self) -> () {
+        ()
     }
 
     fn get_operator_code(&self) -> FieldFilterOperator {
