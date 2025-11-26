@@ -1,14 +1,14 @@
 [package]
 name = "fireplace"
-version = "0.6.1"
+version = "0.6.2"
 edition = "2024"
 
 description = "A client for Firebase that seeks to provide a user-friendly interface to interact with Firestore, Firebase Auth, and similar."
 license = "MIT"
 keywords = ["firebase", "firestore", "firebase-auth"]
 categories = ["database", "authentication", "web-programming"]
-repository = "https://github.com/Filify-app/fireplace"
-homepage = "https://github.com/Filify-app/fireplace"
+repository = "https://github.com/avborup/fireplace"
+homepage = "https://github.com/avborup/fireplace"
 readme = "README.md"
 
 [dependencies]
