@@ -234,6 +234,7 @@ use crate::{
     error::FirebaseError,
 };
 use anyhow::Context;
+use chrono::Utc;
 use reqwest::{Client, ClientBuilder, Response};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use url::Url;
@@ -1237,7 +1238,7 @@ lPTlzALOoknxQtKOWgLsu7XF
                     .ascii_serialization();
                 format!("{base_emulator_url}/securetoken.googleapis.com/v1/token?key={api_key}")
             }
-            false => format!("/token?key={api_key}"),
+            false => self.url(format!("/token?key={api_key}")),
         };
         let res = self
             .post(refresh_token_url)
@@ -1246,7 +1247,7 @@ lPTlzALOoknxQtKOWgLsu7XF
             .form(&params)
             .send()
             .await
-            .context("Failed to send password login request")?;
+            .context("Failed to send refresh token request")?;
 
         if !res.status().is_success() {
             let err = res
@@ -1266,6 +1267,46 @@ lPTlzALOoknxQtKOWgLsu7XF
         tracing::debug!("Token refresh is successful {:?}", refresh_claims);
 
         Ok(refresh_claims)
+    }
+
+    #[tracing::instrument(name = "revoke refresh tokens", skip(self))]
+    pub async fn revoke_refresh_tokens(&self, user_id: &str) -> Result<(), FirebaseError> {
+        let now = Utc::now().timestamp();
+
+        let body = serde_json::json!({
+            "localId": user_id,
+            "validSince": now,
+        });
+
+        let res = self
+            .auth_post(self.url("/accounts:update"))
+            .await?
+            .header("Content-Type", "application/json")
+            .body(body.to_string())
+            .send()
+            .await
+            .context("Failed to send account update to revoke refresh tokens")?;
+
+        if !res.status().is_success() {
+            let err = res
+                .json::<AuthApiErrorResponse>()
+                .await
+                .context("Failed to read error response JSON")?
+                .into();
+
+            tracing::error!("Failed to revoke user refresh tokens: {err}");
+
+            return Err(err);
+        }
+
+        let updated_user_body: String = res.text().await.context("Failed to read response Text")?;
+
+        tracing::debug!(
+            "Refresh Tokens has been revoked successfully: {}",
+            updated_user_body
+        );
+
+        Ok(())
     }
 }
 

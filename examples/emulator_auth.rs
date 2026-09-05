@@ -47,5 +47,12 @@ async fn main() -> Result<(), anyhow::Error> {
 
     println!("Token refreshing successfully {:?}", token_refresh_claims);
 
+    auth_client
+        .revoke_refresh_tokens(token_refresh_claims.user_id.as_str())
+        .await
+        .context("Failed to revoke refresh tokens")?;
+
+    println!("Revoke Refresh tokens is successful");
+
     Ok(())
 }
