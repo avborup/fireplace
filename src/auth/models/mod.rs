@@ -118,3 +118,11 @@ where
     let s = String::deserialize(deserializer)?;
     T::from_str(&s).map_err(serde::de::Error::custom)
 }
+
+#[derive(Debug, Clone, Deserialize, TypedBuilder)]
+#[serde(rename_all = "camelCase")]
+pub struct OobCode {
+    pub email: String,
+    pub oob_code: String,
+    pub oob_link: String,
+}

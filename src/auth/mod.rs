@@ -224,7 +224,7 @@ use self::{
     credential::{ApiAuthTokenManager, UserTokenManager},
     models::{GetAccountInfoResponse, NewUser, User},
 };
-use crate::auth::models::{AuthClaims, RefreshTokenClaims};
+use crate::auth::models::{AuthClaims, OobCode, RefreshTokenClaims};
 use crate::{
     ServiceAccount,
     auth::{
@@ -1307,6 +1307,48 @@ lPTlzALOoknxQtKOWgLsu7XF
         );
 
         Ok(())
+    }
+
+    #[tracing::instrument(name = "generate email verification link", skip(self))]
+    pub async fn generate_email_verification_link(
+        &self,
+        email: &str,
+    ) -> Result<OobCode, FirebaseError> {
+        let body = serde_json::json!({
+            "requestType": "VERIFY_EMAIL",
+            "email": email,
+            "returnOobLink": true
+        });
+
+        let res = self
+            .auth_post(self.url("/accounts:sendOobCode"))
+            .await?
+            .header("Content-Type", "application/json")
+            .body(body.to_string())
+            .send()
+            .await
+            .context("Failed to send email verification link request")?;
+
+        if !res.status().is_success() {
+            let err = res
+                .json::<AuthApiErrorResponse>()
+                .await
+                .context("Failed to read error response JSON for email verification")?
+                .into();
+
+            tracing::error!("Failed to generate email verification link for '{email}': {err}");
+
+            return Err(err);
+        }
+
+        let oob_code: OobCode = res.json().await.context("Failed to read response Text")?;
+
+        tracing::debug!(
+            "Email Link verification has been generated successfully: {:?}",
+            oob_code
+        );
+
+        Ok(oob_code)
     }
 }
 

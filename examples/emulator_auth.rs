@@ -54,5 +54,12 @@ async fn main() -> Result<(), anyhow::Error> {
 
     println!("Revoke Refresh tokens is successful");
 
+    let oob_code = auth_client
+        .generate_email_verification_link(new_user.email.as_str())
+        .await
+        .context("Failed to generate email verification link")?;
+
+    println!("Email verification link successfully {:?}", oob_code);
+
     Ok(())
 }
