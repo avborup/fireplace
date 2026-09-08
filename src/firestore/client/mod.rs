@@ -744,7 +744,7 @@ impl FirestoreClient {
     ///
     /// // We can also just "delete" non-existing documents without error
     /// client
-    ///     .delete_document(&collection("pokemon").doc(Ulid::new()))
+    ///     .delete_document(&collection("pokemon").doc(Ulid::generate()))
     ///     .await?;
     /// # Ok(())
     /// # }

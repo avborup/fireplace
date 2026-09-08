@@ -14,11 +14,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create a new user
     let user_id = auth_client
-        .create_user(NewUser {
-            display_name: Some("Julius Caesar".to_string()),
-            email: "caesar@rome.it".to_string(),
-            password: "venividivici".to_string(),
-        })
+        .create_user(
+            NewUser::builder()
+                .display_name("Julius Caesar".to_string())
+                .username("julius-caesar".to_string())
+                .email("caesar@rome.it".to_string())
+                .password("venividivici".to_string())
+                .build(),
+        )
         .await?;
 
     // Get the user

@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
 use serde::{Deserialize, Deserializer, Serialize};
+use serde_with::skip_serializing_none;
+use typed_builder_macro::TypedBuilder;
 
 mod update_user;
 
@@ -63,10 +65,64 @@ where
     Ok(t)
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[skip_serializing_none]
+#[derive(Debug, Clone, Serialize, TypedBuilder)]
 #[serde(rename_all = "camelCase")]
 pub struct NewUser {
+    #[builder(default = None, setter(into))]
     pub display_name: Option<String>,
     pub email: String,
     pub password: String,
+    #[builder(default = None, setter(into))]
+    #[serde(rename = "localId")]
+    pub username: Option<String>,
+    #[builder(default = false)]
+    pub email_verified: bool,
+    #[builder(default = None, setter(into))]
+    pub phone_number: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, TypedBuilder)]
+pub struct AuthClaims {
+    pub kind: String,
+    pub registered: bool,
+    #[serde(rename = "localId")]
+    pub local_id: String,
+    pub email: String,
+    #[serde(rename = "idToken")]
+    pub id_token: String,
+    #[serde(rename = "refreshToken")]
+    pub refresh_token: String,
+    #[serde(rename = "expiresIn", deserialize_with = "deserialize_from_str")]
+    pub expires_in: u16,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, TypedBuilder)]
+pub struct RefreshTokenClaims {
+    pub access_token: String,
+    pub id_token: String,
+    pub refresh_token: String,
+    pub token_type: String,
+    #[serde(deserialize_with = "deserialize_from_str")]
+    pub expires_in: u16,
+    pub user_id: String,
+    pub project_id: String,
+}
+
+fn deserialize_from_str<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+where
+    T: FromStr,
+    T::Err: std::fmt::Display,
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    T::from_str(&s).map_err(serde::de::Error::custom)
+}
+
+#[derive(Debug, Clone, Deserialize, TypedBuilder)]
+#[serde(rename_all = "camelCase")]
+pub struct OobCode {
+    pub email: String,
+    pub oob_code: String,
+    pub oob_link: String,
 }
