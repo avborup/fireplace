@@ -17,7 +17,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .username(format!("dessalines-{}", uid.to_string()))
         .email(format!("dessalines-{}@example.com", uid.to_string()))
         .password("hello123".to_string())
-        .email_verified(true)
+        .email_verified(false)
         .build();
 
     auth_client
